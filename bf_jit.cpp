@@ -40,15 +40,9 @@ int main() {
         }
         else if(x==']'){
             if(*ptr==0){
-                loops.erase(loops.begin()+loops.size()-1);
-                int brackets = 0;
-                while(stack[i]!=']' && brackets!=0){
-                    if(stack[i]=='[') brackets++;
-                    else if(stack[i]==']') brackets--;
-                    i++;
-                }
+                loops.pop_back();
             } else {
-                i = loops[loops.size()-1].stack;
+                i = loops.back().stack;
             }
         }
         i++;
