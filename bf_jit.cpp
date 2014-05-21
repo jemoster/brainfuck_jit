@@ -8,7 +8,7 @@ using std::cin;
 using std::cout;
  
 int main() {
-    char dat[40000];
+    char dat[30000];
     char *ptr=dat;
     char x;
 
