@@ -1,4 +1,4 @@
-//Brainfuck Just-in-time compiler
+//Brainfuck interpretter
 //
 #include <iostream>
 #include <vector>
@@ -6,46 +6,91 @@
 
 using std::cin;
 using std::cout;
+
+enum cmds {move, change, sLoop, eLoop, input, output};
+
+struct inst {
+    char cmd;
+    int param;
+} ;
  
 int main() {
     char dat[30000];
     char *ptr=dat;
     char x;
 
-    std::stack<int> loops;
-    std::vector<char> stack;
+    std::vector<inst> program;
 
-    while(cin >> x) stack.push_back(x);
+    while(cin >> x){
+         inst tmpInst;
+         if(x=='>') {
+                tmpInst.cmd = move;
+                tmpInst.param = 1;
+         } else if (x=='<') {
+                tmpInst.cmd = move;
+                tmpInst.param = -1;
+         } else if (x=='+') {
+                tmpInst.cmd = change;
+                tmpInst.param = 1;
+         } else if (x=='-') {
+                tmpInst.cmd = change;
+                tmpInst.param = -1;
+         } else if (x=='[') {
+                tmpInst.cmd = sLoop;
+         } else if (x==']') {
+                tmpInst.cmd = eLoop;
+         } else if (x=='.') {
+                tmpInst.cmd = output;
+         } else if (x==',') {
+                tmpInst.cmd = input;
+         }
+         program.push_back(tmpInst);
+    }
 
-    int i=0;
-    while(i<stack.size()){
-        x = stack[i];
-
-        if(x=='>'){++ptr;}
-        else if(x=='<'){--ptr;}
-        else if(x=='+'){++*ptr;}
-        else if(x=='-'){--*ptr;}
-        else if(x=='.'){cout<< *ptr;}
-        else if(x==','){cin >> *ptr;}
-        else if(x=='['){
-            if(*ptr!=0){
-                loops.push(i);
-            } else {
-                int bCounter = 0;
-                i++;
-                while(!(stack[i]==']' && bCounter==0)){
-                    if(stack[i]=='[') bCounter++;
-                    if(stack[i]==']') bCounter--;
-                    i++;
+    //Link Loops
+    for( int j=0; j<program.size(); j++){
+        if(program[j].cmd == sLoop){
+            int k=j+1;
+            int bCounter = 0;
+            while(!(program[k].cmd == eLoop && bCounter==0)){
+                if(program[k].cmd == sLoop) bCounter++;
+                if(program[k].cmd == eLoop) bCounter--;
+                k++;
+                if(k>=program.size()){
+                    cout << "Loop linking failed";
                 }
             }
+            program[k].param = j;
+            program[j].param = k;
         }
-        else if(x==']'){
-            if((*ptr)==0){
-                loops.pop();
-            } else {
-                i = loops.top();
-            }
+
+    }
+
+
+    int i=0;
+    while(i<program.size()){
+        switch(program[i].cmd) {
+            case move : 
+                ptr = ptr+program[i].param;
+                break;
+            case change : 
+                *ptr = *ptr+program[i].param;
+                break;
+            case output : 
+                cout << *ptr;
+                break;
+            case input : 
+                cin >> *ptr;
+                break;
+            case sLoop :
+                if(*ptr==0) i = program[i].param;
+                break;
+            case eLoop :
+                if(*ptr!=0) i = program[i].param;
+                break;
+            default :
+                cout << "ALL FUCKED UP!";
+                break;
         }
         i++;
     }
