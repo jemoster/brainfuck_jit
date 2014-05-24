@@ -13,6 +13,39 @@ struct inst {
     char cmd;
     int param;
 } ;
+
+bool readInstruction(char x, inst &tmpInst){
+     if(x=='>') {
+            tmpInst.cmd = move;
+            tmpInst.param = 1;
+            return true;
+     } else if (x=='<') {
+            tmpInst.cmd = move;
+            tmpInst.param = -1;
+            return true;
+     } else if (x=='+') {
+            tmpInst.cmd = change;
+            tmpInst.param = 1;
+            return true;
+     } else if (x=='-') {
+            tmpInst.cmd = change;
+            tmpInst.param = -1;
+            return true;
+     } else if (x=='[') {
+            tmpInst.cmd = sLoop;
+            return true;
+     } else if (x==']') {
+            tmpInst.cmd = eLoop;
+            return true;
+     } else if (x=='.') {
+            tmpInst.cmd = output;
+            return true;
+     } else if (x==',') {
+            tmpInst.cmd = input;
+            return true;
+     }
+     return false;
+}
  
 int main() {
     char dat[30000];
@@ -21,32 +54,27 @@ int main() {
 
     std::vector<inst> program;
 
-    while(cin >> x){
-         inst tmpInst;
-         if(x=='>') {
-                tmpInst.cmd = move;
-                tmpInst.param = 1;
-         } else if (x=='<') {
-                tmpInst.cmd = move;
-                tmpInst.param = -1;
-         } else if (x=='+') {
-                tmpInst.cmd = change;
-                tmpInst.param = 1;
-         } else if (x=='-') {
-                tmpInst.cmd = change;
-                tmpInst.param = -1;
-         } else if (x=='[') {
-                tmpInst.cmd = sLoop;
-         } else if (x==']') {
-                tmpInst.cmd = eLoop;
-         } else if (x=='.') {
-                tmpInst.cmd = output;
-         } else if (x==',') {
-                tmpInst.cmd = input;
-         }
-         program.push_back(tmpInst);
+    //Load first valid instruction
+    inst firstInst;
+    while(cin>>x){
+        if(readInstruction(x, firstInst)){
+            program.push_back(firstInst);
+            break;
+        }
     }
 
+    while(cin >> x){
+        inst tmpInst;
+        if(readInstruction(x, tmpInst)){
+            //Merge repeated commands
+            if(tmpInst.cmd == program.back().cmd && (tmpInst.cmd==move || tmpInst.cmd==change)){
+                program.back().param += tmpInst.param;
+            } else {
+                program.push_back(tmpInst);
+            }
+        }
+    }
+    
     //Link Loops
     for( int j=0; j<program.size(); j++){
         if(program[j].cmd == sLoop){
