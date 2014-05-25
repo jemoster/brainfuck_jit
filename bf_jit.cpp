@@ -7,7 +7,7 @@
 using std::cin;
 using std::cout;
 
-enum cmds {move, change, sLoop, eLoop, input, output, end};
+enum cmds {move, change, sLoop, eLoop, input, output, setZero, end};
 
 struct inst {
     char cmd;
@@ -47,10 +47,22 @@ bool readInstruction(char x, inst &tmpInst){
      return false;
 }
  
+void optimizeSetZero(std::vector<inst> program){
+    for(int i=0; i<program.size(); i++){
+        if(program[i].cmd == sLoop & program[i+2].cmd == eLoop){
+            if(program[i+1].cmd == change & program[i+1].param == -1){
+                program[i].cmd = setZero;
+                program.erase(program.begin()+i+1,program.begin()+i+2);
+            }
+        }
+    }
+    return;
+}
+
 int main() {
     char dat[30000];
     char *ptr=dat;
-    static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iEnd};
+    static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iSetZero, &&iEnd};
     std::vector<inst> program;
 
     char x;
@@ -101,6 +113,7 @@ int main() {
 
     }
 
+    optimizeSetZero(program);
 
     int i=0;
     goto *jmp[program[i].cmd];
@@ -132,6 +145,11 @@ int main() {
     
     iELoop :
     if(*ptr!=0) i = program[i].param;
+    i++;
+    goto *jmp[program[i].cmd];
+
+    iSetZero:
+    *ptr=0;
     i++;
     goto *jmp[program[i].cmd];
     
