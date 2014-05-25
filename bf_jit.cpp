@@ -7,7 +7,7 @@
 using std::cin;
 using std::cout;
 
-enum cmds {move, change, sLoop, eLoop, input, output};
+enum cmds {move, change, sLoop, eLoop, input, output, end};
 
 struct inst {
     char cmd;
@@ -74,6 +74,13 @@ int main() {
             }
         }
     }
+
+    {
+        inst tmpInst;
+        tmpInst.cmd = end;
+        program.push_back(tmpInst);
+    }
+
     
     //Link Loops
     for( int j=0; j<program.size(); j++){
@@ -96,7 +103,7 @@ int main() {
 
 
     int i=0;
-    while(i<program.size()){
+    while(1){
         switch(program[i].cmd) {
             case move : 
                 ptr = ptr+program[i].param;
@@ -116,11 +123,15 @@ int main() {
             case eLoop :
                 if(*ptr!=0) i = program[i].param;
                 break;
+            case end:
+                goto iEnd;
+                break;
             default :
                 cout << "ALL FUCKED UP!";
                 break;
         }
         i++;
     }
+    iEnd:
     return 0;
 }
