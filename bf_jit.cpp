@@ -50,10 +50,10 @@ bool readInstruction(char x, inst &tmpInst){
 int main() {
     char dat[30000];
     char *ptr=dat;
-    char x;
-
+    static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iEnd};
     std::vector<inst> program;
 
+    char x;
     //Load first valid instruction
     inst firstInst;
     while(cin>>x){
@@ -103,35 +103,38 @@ int main() {
 
 
     int i=0;
-    while(1){
-        switch(program[i].cmd) {
-            case move : 
-                ptr = ptr+program[i].param;
-                break;
-            case change : 
-                *ptr = *ptr+program[i].param;
-                break;
-            case output : 
-                cout << *ptr;
-                break;
-            case input : 
-                cin >> *ptr;
-                break;
-            case sLoop :
-                if(*ptr==0) i = program[i].param;
-                break;
-            case eLoop :
-                if(*ptr!=0) i = program[i].param;
-                break;
-            case end:
-                goto iEnd;
-                break;
-            default :
-                cout << "ALL FUCKED UP!";
-                break;
-        }
-        i++;
-    }
+    goto *jmp[program[i].cmd];
+    
+    iMove: 
+    ptr = ptr+program[i].param;
+    i++;
+    goto *jmp[program[i].cmd];
+    
+    iChange: 
+    *ptr = *ptr+program[i].param;
+    i++;
+    goto *jmp[program[i].cmd];
+    
+    iOutput : 
+    cout << *ptr;
+    i++;
+    goto *jmp[program[i].cmd];
+    
+    iInput : 
+    cin >> *ptr;
+    i++;
+    goto *jmp[program[i].cmd];
+    
+    iSLoop :
+    if(*ptr==0) i = program[i].param;
+    i++;
+    goto *jmp[program[i].cmd];
+    
+    iELoop :
+    if(*ptr!=0) i = program[i].param;
+    i++;
+    goto *jmp[program[i].cmd];
+    
     iEnd:
     return 0;
 }
