@@ -107,7 +107,7 @@ void optimizeAdd(std::vector<inst> &program){
 
 void optimizeInc(std::vector<inst> &program){
     for(int i=0; i<program.size(); i++){
-        if(program[i].cmd==move & program[i+1].cmd==change & program[i+2].cmd==move & program[i].param==program[i+2].param){
+        if(program[i].cmd==move & program[i+1].cmd==change & program[i+2].cmd==move & program[i].param==-program[i+2].param){
             program[i].cmd = inc;
             program[i].param = program[i].param;
             program[i].param2 = program[i+1].param;
@@ -248,9 +248,10 @@ int main() {
 
     
     optimizeSetZero(program);
-    //optimizeInc(program);
+    optimizeInc(program);
     //optimizeAdd(program);
     linkLoops(program);
+    //printProgram(program);
 
     execute(program, ptr);
 }
