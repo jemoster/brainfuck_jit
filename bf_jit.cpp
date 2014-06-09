@@ -9,7 +9,7 @@ using std::cin;
 using std::cout;
 using std::endl;
 
-enum cmds {move, change, sLoop, eLoop, input, output, setZero, inc, add, end};
+enum cmds {move, change, sLoop, eLoop, input, output, setVal, inc, add, end};
 
 struct inst {
     char cmd;
@@ -30,7 +30,7 @@ void printProgram(const std::vector<inst> program){
             case 3: cout<<"eLoop"; break;
             case 4: cout<<"input"; break;
             case 5: cout<<"output"; break;
-            case 6: cout<<"setZero"; break;
+            case 6: cout<<"setVal"; break;
             case 7: cout<<"inc"; break;
             case 8: cout<<"add"; break;
             case 9: cout<<"end"; break;
@@ -77,7 +77,9 @@ void optimizeSetZero(std::vector<inst> &program){
     for(int i=0; i<program.size(); i++){
         if(program[i].cmd == sLoop & program[i+2].cmd == eLoop){
             if(program[i+1].cmd == change & program[i+1].param == -1){
-                program[i].cmd = setZero;
+                program[i].cmd = setVal;
+                program[i].param = 0;
+                program[i].param2 = 0;
                 program.erase(program.begin()+i+1,program.begin()+i+2+1);
             }
         }
@@ -124,7 +126,8 @@ void optimizeAdd(std::vector<inst> &program){
                             program[i+k].param = truncated[k].param;
                             program[i+k].param2 = truncated[k].param2;
                         }
-                        program[i+truncated.size()].cmd = setZero;
+                        program[i+truncated.size()].cmd = setVal;
+                        program[i+truncated.size()].param= 0;
                         program.erase(program.begin()+i+truncated.size()+1, program.begin()+i+j+1);
                     }
                 }
@@ -191,7 +194,7 @@ void linkLoops(std::vector<inst> &program){
 }
          
 int execute(const std::vector<inst> program, char* ptr, char dat[]){
-    static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iSetZero, &&iInc, &&iAdd, &&iEnd};
+    static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iSetVal, &&iInc, &&iAdd, &&iEnd};
     int i=0;
     //goto iEnd;
     goto *jmp[program[i].cmd];
@@ -229,8 +232,8 @@ int execute(const std::vector<inst> program, char* ptr, char dat[]){
     i++;
     goto *jmp[program[i].cmd];
 
-    iSetZero:
-    *ptr=0;
+    iSetVal:
+    *ptr=program[i].param;
     i++;
     goto *jmp[program[i].cmd];
 
@@ -251,7 +254,7 @@ int execute(const std::vector<inst> program, char* ptr, char dat[]){
 int main(int argc, char** argv) {
 
     /** Arguements 
-    * -O1 setZero optimization
+    * -O1 setVal optimization
     * -O2 O1 + setInv optimization
     * -O3 O2 + setAdd optimization
     * -On All optimzations
