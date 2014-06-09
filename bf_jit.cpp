@@ -17,6 +17,29 @@ struct inst {
     int param2;
 } ;
 
+void printSubset(const std::vector<inst> &program, int start, int end);
+
+void printProgram(const std::vector<inst> program){
+    int k = 0;
+    for(int j=0; j<program.size(); j++){
+        cout<<(j+k)<<": ";
+        switch(program[j].cmd){
+            case 0: cout<<"move"; break;
+            case 1: cout<<"change"; break;
+            case 2: cout<<"sLoop"; break;
+            case 3: cout<<"eLoop"; break;
+            case 4: cout<<"input"; break;
+            case 5: cout<<"output"; break;
+            case 6: cout<<"setZero"; k+=2; break;
+            case 7: cout<<"inc"; break;
+            case 8: cout<<"add"; break;
+            case 9: cout<<"end"; break;
+            default: cout<<"unknown"; break;
+        }
+        cout<<",\t"<<program[j].param<<",\t"<<program[j].param2<<endl;
+    }
+}
+
 bool readInstruction(char x, inst &tmpInst){
      if(x=='>') {
             tmpInst.cmd = move;
@@ -65,7 +88,10 @@ void optimizeSetZero(std::vector<inst> &program){
 void optimizeAdd(std::vector<inst> &program){
     for(int i=0; i<program.size(); i++){
         if(program[i].cmd == sLoop){
-            for(int j=1; j<program.size(); j++){
+            for(int j=1; i+j<program.size(); j++){
+                //Stop if this isn't the inner most loop
+                if(program[i+j].cmd == sLoop) break;
+
                 if(program[i+j].cmd == eLoop){
                     
                     std::vector<inst> truncated;
@@ -78,6 +104,7 @@ void optimizeAdd(std::vector<inst> &program){
                             if(program[i+k].param!=-1){
                                 isValid=false;
                             } else {
+                                if(hasDec) break;
                                 hasDec = true;
                             }
                         } else if (program[i+k].cmd==inc) {
@@ -90,21 +117,35 @@ void optimizeAdd(std::vector<inst> &program){
                             isValid=false;
                         }
                     }
+
                     if(isValid && hasDec){
                         for(int k=0; k<truncated.size(); k++){
                             program[i+k].cmd = add;
                             program[i+k].param = truncated[k].param;
+                            program[i+k].param2 = truncated[k].param2;
                         }
                         program[i+truncated.size()].cmd = setZero;
                         program.erase(program.begin()+i+truncated.size()+1, program.begin()+i+j+1);
                     }
-                } else if(program[i+j].cmd == sLoop)j=program.size();
+                }
             }
-            //scan:
         }
     }
     return;
 }
+
+void printSubset(const std::vector<inst> &program, int start, int end){
+    if(start>end || end>program.size() || start<0){
+        return;
+    }
+    std::vector<inst> tmpLoop;
+    for(int l=start; l<=end; l++){
+        tmpLoop.push_back(program[l]);
+    }
+    printProgram(tmpLoop);
+}
+
+        
 
 void optimizeInc(std::vector<inst> &program){
     for(int i=0; i<program.size(); i++){
@@ -139,26 +180,6 @@ void linkLoops(std::vector<inst> &program){
     }
 }
          
-void printProgram(const std::vector<inst> program){
-    int k = 0;
-    for(int j=0; j<program.size(); j++){
-        cout<<(j+k)<<": ";
-        switch(program[j].cmd){
-            case 0: cout<<"move"; break;
-            case 1: cout<<"change"; break;
-            case 2: cout<<"sLoop"; break;
-            case 3: cout<<"eLoop"; break;
-            case 4: cout<<"input"; break;
-            case 5: cout<<"output"; break;
-            case 6: cout<<"setZero"; k+=2; break;
-            case 7: cout<<"inc"; break;
-            case 8: cout<<"add"; break;
-            case 9: cout<<"end"; break;
-            default: cout<<"unknown"; break;
-        }
-        cout<<",\t"<<program[j].param<<",\t"<<program[j].param2<<endl;
-    }
-}
 int execute(const std::vector<inst> program, char* ptr, char dat[]){
     static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iSetZero, &&iInc, &&iAdd, &&iEnd};
     int i=0;
@@ -204,7 +225,7 @@ int execute(const std::vector<inst> program, char* ptr, char dat[]){
     goto *jmp[program[i].cmd];
 
     iAdd:
-    *(ptr+program[i].param) += *ptr;
+    *(ptr+program[i].param) += *ptr * program[i].param2;
     i++;
     goto *jmp[program[i].cmd];
     
@@ -302,7 +323,7 @@ int main(int argc, char** argv) {
     if(executeInst) executionStatus = execute(program, ptr, dat);
 
     if(executionStatus){
-         cout<<"OH SHIT OH SHIT OH SHIT"<<endl;
+         cout<<endl<<"EXECUTION ERROR!"<<endl;
     }
 
     return executionStatus;
