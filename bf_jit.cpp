@@ -159,7 +159,7 @@ void printProgram(const std::vector<inst> program){
         cout<<",\t"<<program[j].param<<",\t"<<program[j].param2<<endl;
     }
 }
-void execute(const std::vector<inst> program, char* ptr){
+int execute(const std::vector<inst> program, char* ptr, char dat[]){
     static void *jmp[] = { &&iMove, &&iChange , &&iSLoop, &&iELoop, &&iInput, &&iOutput, &&iSetZero, &&iInc, &&iAdd, &&iEnd};
     int i=0;
     //goto iEnd;
@@ -171,6 +171,9 @@ void execute(const std::vector<inst> program, char* ptr){
     goto *jmp[program[i].cmd];
     
     iChange: 
+    if(ptr<&dat[0] || ptr>(&dat[30000])){
+         return 1;
+    }
     *ptr = *ptr+program[i].param;
     i++;
     goto *jmp[program[i].cmd];
@@ -211,7 +214,7 @@ void execute(const std::vector<inst> program, char* ptr){
     goto *jmp[program[i].cmd];
 
     iEnd:
-    return;
+    return 0;
 }
 
 int main(int argc, char** argv) {
@@ -295,5 +298,12 @@ int main(int argc, char** argv) {
 
     if(printInst) printProgram(program);
 
-    if(executeInst) execute(program, ptr, dat);
+    int executionStatus;
+    if(executeInst) executionStatus = execute(program, ptr, dat);
+
+    if(executionStatus){
+         cout<<"OH SHIT OH SHIT OH SHIT"<<endl;
+    }
+
+    return executionStatus;
 }
