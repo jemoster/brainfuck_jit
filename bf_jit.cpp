@@ -171,6 +171,19 @@ void optimizeInc(std::vector<inst> &program){
     return;
 }
 
+void optimizeSetValue(std::vector<inst> &program){
+    for(int i=0; i<program.size(); i++){
+        if(program[i].cmd==setVal & program[i+1].cmd==change){
+            //Truncate
+            program[i].cmd = setVal;
+            program[i].param += program[i+1].param;
+            program[i].param2 = 0;
+            program.erase(program.begin()+i+1,program.begin()+i+2);
+        }
+    }
+    return;
+}
+
 void linkLoops(std::vector<inst> &program){
     //Link Loops
     for( int j=0; j<program.size(); j++){
@@ -254,9 +267,10 @@ int execute(const std::vector<inst> program, char* ptr, char dat[]){
 int main(int argc, char** argv) {
 
     /** Arguements 
-    * -O1 setVal optimization
+    * -O1 setVal=0 optimization
     * -O2 O1 + setInv optimization
     * -O3 O2 + setAdd optimization
+    * -O4 O3 + setVal optimization
     * -On All optimzations
     * -p Print brainfuck instructions 
     * -h Print help instructions
@@ -282,6 +296,7 @@ int main(int argc, char** argv) {
             if(opt[2] == '1') { optimizationLevel = 1;}
             else if(opt[2] == '2') { optimizationLevel = 2;}
             else if(opt[2] == '3') { optimizationLevel = 3;}
+            else if(opt[2] == '4') { optimizationLevel = 4;}
             else if(opt[2] == 'n') { optimizationLevel = 4;}
         }
     }
@@ -327,6 +342,9 @@ int main(int argc, char** argv) {
     }
     if(optimizationLevel>2){
         optimizeAdd(program);
+    }
+    if(optimizationLevel>3){
+        optimizeSetValue(program);
     }
     linkLoops(program);
 
