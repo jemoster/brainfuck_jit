@@ -149,11 +149,20 @@ void printSubset(const std::vector<inst> &program, int start, int end){
 
 void optimizeInc(std::vector<inst> &program){
     for(int i=0; i<program.size(); i++){
-        if(program[i].cmd==move & program[i+1].cmd==change & program[i+2].cmd==move & program[i].param==-program[i+2].param){
+        if(program[i].cmd==move & program[i+1].cmd==change & program[i+2].cmd==move){
+            //Truncate
             program[i].cmd = inc;
             program[i].param = program[i].param;
             program[i].param2 = program[i+1].param;
-            program.erase(program.begin()+i+1,program.begin()+i+2+1);
+            program.erase(program.begin()+i+1,program.begin()+i+2);
+            
+            //Account for deficit
+            if(program[i+1].param+program[i].param != 0){
+                program[i+1].param += program[i].param;
+            } else {
+                //Remove 0 distance moves
+                program.erase(program.begin()+i+1,program.begin()+i+2);
+            }
         }
     }
     return;
