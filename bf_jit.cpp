@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <string>
 
 using std::cin;
 using std::cout;
@@ -213,7 +214,41 @@ void execute(const std::vector<inst> program, char* ptr){
     return;
 }
 
-int main() {
+int main(int argc, char** argv) {
+
+    /** Arguements 
+    * -O1 setZero optimization
+    * -O2 O1 + setInv optimization
+    * -O3 O2 + setAdd optimization
+    * -On All optimzations
+    * -p Print brainfuck instructions 
+    * -h Print help instructions
+    * --help Print help instructions
+    * -d disable execution of instructions
+    **/
+
+    int optimizationLevel = 0;
+    bool printInst = false;
+    bool executeInst = true;
+
+    for(int i=1; i<argc; i++){
+        std::string opt = std::string(argv[i]);
+        if(opt == "-p"){
+            printInst = true;
+        } else if(opt == "-d"){
+            executeInst = false;
+        } else if(opt.size()>2 & opt.substr(0,2)=="-O"){
+            if(optimizationLevel != 0) {
+                cout << "Do not select multiple optimization levels !!" << endl;
+                return -1;
+            }
+            if(opt[2] == '1') { optimizationLevel = 1;}
+            else if(opt[2] == '2') { optimizationLevel = 2;}
+            else if(opt[2] == '3') { optimizationLevel = 3;}
+            else if(opt[2] == 'n') { optimizationLevel = 4;}
+        }
+    }
+    
     char dat[30000];
     char *ptr=dat;
     std::vector<inst> program;
@@ -247,11 +282,18 @@ int main() {
     }
 
     
-    optimizeSetZero(program);
-    optimizeInc(program);
-    //optimizeAdd(program);
+    if(optimizationLevel>0){
+        optimizeSetZero(program);
+    }
+    if(optimizationLevel>1){
+        optimizeInc(program);
+    }
+    if(optimizationLevel>2){
+        optimizeAdd(program);
+    }
     linkLoops(program);
-    //printProgram(program);
 
-    execute(program, ptr);
+    if(printInst) printProgram(program);
+
+    if(executeInst) execute(program, ptr, dat);
 }
