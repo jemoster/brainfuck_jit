@@ -177,8 +177,8 @@ void optimizeSetValue(std::vector<inst> &program){
         if(program[i].cmd==setVal & program[i+1].cmd==change){
             //Truncate
             program[i].cmd = setVal;
-            program[i].param += program[i+1].param;
-            program[i].param2 = 0;
+            program[i].param = 0;
+            program[i].param2 += program[i+1].param;
             program.erase(program.begin()+i+1,program.begin()+i+2);
         }
     }
@@ -186,13 +186,12 @@ void optimizeSetValue(std::vector<inst> &program){
         if(program[i].cmd==move & program[i+1].cmd==setVal & program[i+2].cmd==move){
             //Truncate
             program[i].cmd = setVal;
-            program[i].param2 = program[i].param;
-            program[i].param = program[i+1].param;
+            program[i].param2 = program[i+1].param2;
             program.erase(program.begin()+i+1,program.begin()+i+2);
             
             //Account for deficit
-            if(program[i+1].param+program[i].param2 != 0){
-                program[i+1].param += program[i].param2;
+            if(program[i+1].param+program[i].param != 0){
+                program[i+1].param += program[i].param;
             } else {
                 //Remove 0 distance moves
                 program.erase(program.begin()+i+1,program.begin()+i+2);
@@ -264,7 +263,7 @@ int execute(const std::vector<inst> program, char* ptr, char dat[]){
     goto *jmp[program[i].cmd];
 
     iSetVal:
-    *(ptr+program[i].param2)=program[i].param;
+    *(ptr+program[i].param)=program[i].param2;
     i++;
     goto *jmp[program[i].cmd];
 
