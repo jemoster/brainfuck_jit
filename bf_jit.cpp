@@ -30,7 +30,7 @@ void printProgram(const std::vector<inst> program){
             case 3: cout<<"eLoop"; break;
             case 4: cout<<"input"; break;
             case 5: cout<<"output"; break;
-            case 6: cout<<"setZero"; k+=2; break;
+            case 6: cout<<"setZero"; break;
             case 7: cout<<"inc"; break;
             case 8: cout<<"add"; break;
             case 9: cout<<"end"; break;
@@ -173,6 +173,7 @@ void linkLoops(std::vector<inst> &program){
                     cout << "Loop linking failed";
                 }
             }
+            if(j==k) cout << "WAT?";
             program[k].param = j;
             program[j].param = k;
         }
